@@ -1,6 +1,9 @@
 from api import create_app
 from flask import jsonify, request
 
+from api.tutorials.models import Video
+from api.database import db
+
 app=create_app()
 
 
@@ -19,39 +22,63 @@ tutorials = [
 
 client = app.test_client()
 
-from api.tutorials.models import * 
+
 
 @app.route('/tutorials',methods=['GET'])
 def get_or_update_list():
-    if request.method=='GET':
-        return jsonify(tutorials)
+    videos= Video.query.all()
+    serialized = []
+    for video in videos:
+        serialized.append({
+            'id': video.id,
+            'name': video.name,
+            'description': video.description
+        }) 
+    return jsonify(serialized) 
     
 @app.route('/tutorials',methods=['POST'])
 def update_list():
-    new_one= request.json
-    tutorials.append(new_one)
-    return jsonify(tutorials)
+    new_one= Video(**request.json) 
+    db.session.add(new_one)
+    db.session.commit()
+    serialized = [
+        {
+            'id': new_one.id,
+            'name': new_one.name,
+            'description': new_one.description
+        }
+    ]
+
+    return jsonify(serialized)
 
 
 @app.route('/tutorials/<int:tutorial_id>',methods=['PUT'])
 def update_tutorial(tutorial_id):
-
-    item= next((x for x in tutorials if x['id'] == tutorial_id), None)
+    item= Video.query.filter(Video.id == tutorial_id).first() 
     params= request.json
     if not item:
         return {'message': 'No tutorials with this id'}, 400
     
-    item.update(params)
+    for key, value in params.items():
+        setattr(item, key, value) 
+    db.session.commit()
+    serialized = {
+        'id': item.id,
+        'name': item.name,
+        'description': item.description
+    }
     return item
 
 
 @app.route('/tutorials/<int:tutorial_id>',methods=['DELETE'])
 def delete_tutorial(tutorial_id):
 
-    idx, _ = next((x for x in enumerate(tutorials)
-                   if x[1]['id'] == tutorial_id), (None, None))
+    item= Video.query.filter(Video.id == tutorial_id).first() 
+    if not item:
+        return {'message': 'No tutorials with this id'}, 400
     
-    tutorials.pop(idx )
+    db.session.delete(item) 
+    db.session.commit() 
     return "", 204 
      
     
