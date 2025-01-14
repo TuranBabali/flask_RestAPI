@@ -19,6 +19,7 @@ tutorials = [
 
 client = app.test_client()
 
+from api.tutorials.models import * 
 
 @app.route('/tutorials',methods=['GET'])
 def get_or_update_list():

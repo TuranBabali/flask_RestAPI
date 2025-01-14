@@ -12,7 +12,7 @@ def test_get():
     assert len(res.get_json()) == 2
     assert res.get_json()[0]['id'] == 1
 
-def test_get():
+def test_post():
     data= {
         'id': 3,
         'title': 'Unit Tests',
