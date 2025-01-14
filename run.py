@@ -1,11 +1,13 @@
 from api import create_app
 from flask import jsonify, request
+from flask_jwt_extended import JWTManager
 
 from api.tutorials.models import Video
 from api.database import db
 
 app=create_app()
 
+jwt= JWTManager(app)
 
 tutorials = [
     {
